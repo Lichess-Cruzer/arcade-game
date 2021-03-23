@@ -1,78 +1,158 @@
-//Global Variables ------------------------------------------
+// Our Initial State
+let gameState = {
+    canvas: $('#canvas')
+};
 
-let lastRenderTime = 0;
-let Snake_Speed = 1;
+let snakeBody = [
+        [10, 11],
+        [11, 11],
+        [12, 11], 
+    ]    
 
-const snakeBody = [
-    { x:10 , y:11 },
-    { x:11 , y:11 },
-    { x:12 , y:11 },
-    { x:13 , y:11 },
-    { x:14 , y:11 },
-]
+let nextDirection = { x: 0, y:0 };
+let lastInputDirection = { x: 0, y:0 };
 
-const gameBoard = document.getElementById('game-board')
+let food = { x:10, y:1 };
+// const EXPANSION_RATE = 1;
+// let newSegments = 0;
 
-
-//Main Tick Function ------------------------------------------
-
-// Creates our tick function
-function main(currentTime) {
-    window.requestAnimationFrame(main);
-    const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
-    if (secondsSinceLastRender < 1 / Snake_Speed) return
-    
-
-    lastRenderTime = currentTime
-
-    update()
-    draw()
+// Calls main renderState and buildSnake functions upon loading
+function buildInitialState() {
+    renderState()
+    // buildSnake()
 }
 
-window.requestAnimationFrame(main);
+//RenderState function provides constant updating for our game
+function renderState() {
+    const canvasElement = $('#canvas')
+    canvasElement.empty()
+    // gameState.canvas.forEach(function (row, rowIndex) {
+    //     row.forEach(function (segment, segmentIndex) {
+    //         const segmentElement = $(`<div class="segment" data-x="${rowIndex}" data-y="${segmentIndex}" ></div>`)
+    //         canvasElement.append(segmentElement)
+    //     })
+    // })
+}
 
-//Main Calling Functions ------------------------------------------
+//onBoardClick function allows us to call multiple helper functions to execute upon click
+function onBoardClick() {
 
-// Main function that calls to update our page, snake body, apple placement, etc
+        renderState(); 
+    }
+
+    // Once clicked, this click helper function calls the interval(speed) of game
+    $(".board").on("click", onBoardClick); 
+    setInterval(tick, 400)
+
+    //Call to buildSnake with each tick update
+    function tick() {
+        console.log('tick')
+    //   buildSnake();
+}
+
+buildInitialState()
+
+//Updates page per Loop -- calls helper functions
 function update() {
     updateSnake();
+    // updateSnakeFood();
+    // expandSnake();
+    // onSnake();
+    // equalPositions();
 }
 
-// Main function that calls our snake body and apple creation
+//Draws per Loop -- calls helper functions
 function draw() {
-    gameBoard.innerHTML = '';
-    drawSnake(gameBoard);
+    canvas.innerHTML = '';
+    drawSnake(canvas);
+    drawFood(canvas)
 }
 
-//Snake ------------------------------------------
+//Builds our Snake
+function drawSnake(canvas) {
 
+    let idCounter = 0;
 
-function updateSnake() {
-    //For loop grabs the second to last snakeElement in our snake and moves 
-    //it to previous snakeElement location, eliminating the end tail piece.
-    //[i] = second to last snakeElement & [i + 1] = is our last snakeElement
-    //{...snakeBody[i]} = duplicate of snakeBody[i + 1] and places that 
-    //duplicate snakeElement in snakeBody[i + 1]'s place
-    //{...snakeBody[i]} = current snakeElement moving forward
-    //snakeBody[i + 1] = represents previous snakeElement that has dissapeared
-    for(let i = snakeBody.length - 2; i >=0; i--) {
-        snakeBody[i + 1] = { ...snakeBody[i] }
-    };
-
-    //Snake Head
-    snakeBody[0].x += 0;
-    snakeBody[0].y += 1;
-}
-
-//Creates our Snake Body
-function drawSnake(gameBoard) {
-    //Creates our initial body element(s) for the snake
-    snakeBody.forEach(function(segment){
-     const snakeElement = document.createElement('div');
-     snakeElement.style.gridRowStart = segment.y;
-     snakeElement.style.gridColumnStart = segment.x;
-     snakeElement.classList.add('snake');
-     gameBoard.appendChild(snakeElement);
+    snakeBody.forEach(function(segment) {
+        const snakeElement = document.createElement('div')
+        jQuery(snakeElement).attr("id", `${idCounter}`);
+        snakeElement.style.gridRowStart = segment[1];
+        snakeElement.style.gridColumnStart = segment[0];
+        snakeElement.classList.add('snake');
+        gameState.canvas.append(snakeElement);
+        idCounter++;
+        console.log(snakeElement)
     })
 }
+
+// Render new body parts on Snake
+function updateSnake() {
+    const inputDirection = getNextDirection();
+    console.log(inputDirection)
+    for(let i = snakeBody.length - 1; i >= 0; i--) {
+        // snakeBody[i + 1] = snakeBody.push(snakeBody[i])
+        // // console.log({ ...snakeBody[i] }) snakeBody.push(snakeBody[i])
+        // // console.log(snakeBody[i + 1], 'this is snakeBody i+1')
+        // console.log(snakeBody, 'this is from the forLoop')
+        let partOfSnake = snakeBody[i];
+        partOfSnake[0]++
+        let htmlSnakeBody = document.getElementById(i)
+        htmlSnakeBody.style.gridRowStart = partOfSnake;
+        htmlSnakeBody.style.gridColumnStart = partOfSnake;
+        htmlSnakeBody.classList.add('snake');
+        gameState.canvas.append();
+    };
+    //Head
+    // snakeBody[0].x += 1;
+    // console.log(snakeBody[0].x += inputDirection.x)
+    // snakeBody[0].y += 0;
+    console.log(snakeBody, 'this is from the updateSnake function')
+}
+
+// Move Snake's Direction
+window.addEventListener('keydown', function(event) {
+    switch (event.key) {
+        case 'ArrowUp':
+            if(lastInputDirection.y !== 0) break
+            nextDirection = { x:0, y:-1}
+            break
+        case 'ArrowDown':
+            if(lastInputDirection.y !== 0) break
+            nextDirection = { x:0, y:1}
+            break
+        case 'ArrowLeft':
+            if(lastInputDirection.x !== 0) break
+            nextDirection = { x:-1, y:0}
+            break
+        case 'ArrowRight':
+            if(lastInputDirection.x !== 0) break
+            nextDirection = { x:1, y:0}
+            break
+    }
+} )
+
+//Calls Snake's direction
+function getNextDirection(){
+    lastInputDirection = nextDirection
+    return nextDirection;
+}
+
+//Food Render Function
+function drawFood(canvas) {
+        const foodElement = document.createElement('div')
+        foodElement.style.gridRowStart = food.y;
+        foodElement.style.gridColumnStart = food.x;
+        foodElement.classList.add('food');
+        gameState.canvas.append(foodElement);
+}
+
+//UpdateSnakeFood
+
+
+
+
+
+draw()
+update()
+// updateSnake()
 
