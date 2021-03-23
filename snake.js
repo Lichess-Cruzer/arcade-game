@@ -97,6 +97,10 @@ function updateSnake() {
         let partOfSnake = snakeBody[i];
         partOfSnake[0]++
         let htmlSnakeBody = document.getElementById(i)
+        htmlSnakeBody.style.gridRowStart = partOfSnake;
+        htmlSnakeBody.style.gridColumnStart = partOfSnake;
+        htmlSnakeBody.classList.add('snake');
+        gameState.canvas.append();
     };
     //Head
     // snakeBody[0].x += 1;
