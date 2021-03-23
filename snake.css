@@ -3,31 +3,30 @@
     margin: 0;
 }
 
-#app {
+body {
     min-height: 100vh;
     width: 100vw;
     display: flex;
-    justify-content: center;
     align-items: center;
     margin: 0;
     background-color: black;
 }
 
-#canvas {
+#game-board {
     background-color: lightgray;
     width: 100vmin;
     height: 100vmin;
     display: grid;
-    grid-template-rows: repeat(20, 1fr);
-    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(21, 1fr);
+    grid-template-columns: repeat(21, 1fr);
 }
 
 .snake {
     background-color: lightskyblue;
-    border: .2vmin solid black;
+    border: .25vmin solid black;
 }
 
 .food {
     background-color: red;
-    border: .2vmin solid black;
+    border: .25vmin solid black;
 }
