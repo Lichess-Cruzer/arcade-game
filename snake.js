@@ -1,158 +1,234 @@
-// Our Initial State
-let gameState = {
-    canvas: $('#canvas')
-};
+//Global Variables ------------------------------------------
 
-let snakeBody = [
-        [10, 11],
-        [11, 11],
-        [12, 11], 
-    ]    
+let lastRenderTime = 0;
+let Snake_Speed = 10;
 
-let nextDirection = { x: 0, y:0 };
-let lastInputDirection = { x: 0, y:0 };
+const snakeBody = [
+    { x:11 , y:11 }  
+];
+let newSnakeElements = 0;
 
 let food = { x:10, y:1 };
-// const EXPANSION_RATE = 1;
-// let newSegments = 0;
+const expansionRate = 1;
 
-// Calls main renderState and buildSnake functions upon loading
-function buildInitialState() {
-    renderState()
-    // buildSnake()
-}
 
-//RenderState function provides constant updating for our game
-function renderState() {
-    const canvasElement = $('#canvas')
-    canvasElement.empty()
-    // gameState.canvas.forEach(function (row, rowIndex) {
-    //     row.forEach(function (segment, segmentIndex) {
-    //         const segmentElement = $(`<div class="segment" data-x="${rowIndex}" data-y="${segmentIndex}" ></div>`)
-    //         canvasElement.append(segmentElement)
-    //     })
-    // })
-}
+const gameBoard = $('#game-board');
 
-//onBoardClick function allows us to call multiple helper functions to execute upon click
-function onBoardClick() {
+let inputDirection = { x:0, y:0 };
+let lastInputDirection = { x:0, y:0 };
 
-        renderState(); 
+let grid_size = 21;
+let gameOver = false;
+
+
+//Main Tick Function ------------------------------------------
+
+// Creates game tick function
+function main(currentTime) {
+
+    if(gameOver) {
+        return alert('you lose')
     }
+//Adjust render speed
+    window.requestAnimationFrame(main);
+    const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
+    if (secondsSinceLastRender < 1 / Snake_Speed) return
+    
 
-    // Once clicked, this click helper function calls the interval(speed) of game
-    $(".board").on("click", onBoardClick); 
-    setInterval(tick, 400)
+    lastRenderTime = currentTime
 
-    //Call to buildSnake with each tick update
-    function tick() {
-        console.log('tick')
-    //   buildSnake();
+//Call on each render
+    update()
+    draw()
 }
 
-buildInitialState()
+window.requestAnimationFrame(main);
 
-//Updates page per Loop -- calls helper functions
+//Main Calling Functions ------------------------------------------
+
+// Main function that calls to update our page, snake body, food placement, etc
 function update() {
     updateSnake();
-    // updateSnakeFood();
-    // expandSnake();
-    // onSnake();
-    // equalPositions();
+    updateFood();
+    onSnake(food);
+    randomGridPosition();
+    snakeDeath();
 }
 
-//Draws per Loop -- calls helper functions
+// Main function that calls our snake body and food creation
 function draw() {
-    canvas.innerHTML = '';
-    drawSnake(canvas);
-    drawFood(canvas)
+    $('#game-board').empty();
+    drawSnake(gameBoard);
+    drawFood(gameBoard);
+    getSnakeHead();
+    snakeIntersection();
+    
 }
 
-//Builds our Snake
-function drawSnake(canvas) {
-
-    let idCounter = 0;
-
-    snakeBody.forEach(function(segment) {
-        const snakeElement = document.createElement('div')
-        jQuery(snakeElement).attr("id", `${idCounter}`);
-        snakeElement.style.gridRowStart = segment[1];
-        snakeElement.style.gridColumnStart = segment[0];
-        snakeElement.classList.add('snake');
-        gameState.canvas.append(snakeElement);
-        idCounter++;
-        console.log(snakeElement)
-    })
+// Kills the snake :( -- Calls gameOver
+function snakeDeath() {
+    gameOver = outsideGrid(getSnakeHead()) || snakeIntersection()
 }
 
-// Render new body parts on Snake
+//Snake ------------------------------------------
+
+
 function updateSnake() {
-    const inputDirection = getNextDirection();
-    console.log(inputDirection)
-    for(let i = snakeBody.length - 1; i >= 0; i--) {
-        // snakeBody[i + 1] = snakeBody.push(snakeBody[i])
-        // // console.log({ ...snakeBody[i] }) snakeBody.push(snakeBody[i])
-        // // console.log(snakeBody[i + 1], 'this is snakeBody i+1')
-        // console.log(snakeBody, 'this is from the forLoop')
-        let partOfSnake = snakeBody[i];
-        partOfSnake[0]++
-        let htmlSnakeBody = document.getElementById(i)
-        htmlSnakeBody.style.gridRowStart = partOfSnake;
-        htmlSnakeBody.style.gridColumnStart = partOfSnake;
-        htmlSnakeBody.classList.add('snake');
-        gameState.canvas.append();
-    };
-    //Head
-    // snakeBody[0].x += 1;
-    // console.log(snakeBody[0].x += inputDirection.x)
-    // snakeBody[0].y += 0;
-    console.log(snakeBody, 'this is from the updateSnake function')
-}
 
-// Move Snake's Direction
-window.addEventListener('keydown', function(event) {
+    //Adds newSnakeElements when snake eats food. Appends to snake body.
+    addSegments();
+
+    //Connects our key input direction to control snake
+    const inputDirection = getInputDirection();
+
+    //For loop grabs the second to last snakeElement in our snake and moves 
+    //it to previous snakeElement location, eliminating the end tail piece.
+    //[i] = second to last snakeElement & [i + 1] = is our last snakeElement
+    //{...snakeBody[i]} = duplicate of snakeBody[i + 1] and places that 
+    //duplicate snakeElement in snakeBody[i + 1]'s place
+    //{...snakeBody[i]} = current snakeElement moving forward
+    //snakeBody[i + 1] = previous snakeElement that has dissapeared
+    for(let i = snakeBody.length - 2; i >=0; i--) {
+        snakeBody[i + 1] = { ...snakeBody[i] }
+    };
+
+    //Snake Head
+    //Snake input direction connected to snake head
+    snakeBody[0].x += inputDirection.x
+    snakeBody[0].y += inputDirection.y
+};
+
+//Creates our Initial Snake Body
+function drawSnake(gameBoard) {
+    //Creates our initial body element(s) for the snake
+    snakeBody.forEach(function(segment){
+     const snakeElement = document.createElement('div');
+     snakeElement.style.gridRowStart = segment.y;
+     snakeElement.style.gridColumnStart = segment.x;
+     snakeElement.classList.add('snake');
+     $('#game-board').append(snakeElement);
+    })
+};
+
+
+//Input Information ------------------------------------------
+
+//Key directions while ensuring snake does not back-in to itself
+window.addEventListener('keydown', function(event){
     switch (event.key) {
         case 'ArrowUp':
             if(lastInputDirection.y !== 0) break
-            nextDirection = { x:0, y:-1}
+            inputDirection = { x:0, y:-1 }
             break
         case 'ArrowDown':
             if(lastInputDirection.y !== 0) break
-            nextDirection = { x:0, y:1}
+            inputDirection = { x:0, y:1 }
             break
         case 'ArrowLeft':
             if(lastInputDirection.x !== 0) break
-            nextDirection = { x:-1, y:0}
+            inputDirection = { x:-1, y:0 }
             break
         case 'ArrowRight':
             if(lastInputDirection.x !== 0) break
-            nextDirection = { x:1, y:0}
+            inputDirection = { x:1, y:0 }
             break
     }
 } )
 
-//Calls Snake's direction
-function getNextDirection(){
-    lastInputDirection = nextDirection
-    return nextDirection;
+// Calls previous key direction to new inputDirection, returing the function above
+function getInputDirection() {
+    lastInputDirection = inputDirection
+    return inputDirection
 }
 
-//Food Render Function
-function drawFood(canvas) {
-        const foodElement = document.createElement('div')
-        foodElement.style.gridRowStart = food.y;
-        foodElement.style.gridColumnStart = food.x;
-        foodElement.classList.add('food');
-        gameState.canvas.append(foodElement);
+//Food ------------------------------------------
+
+//Helper Function for when food is onSnake, it calls expandSnake function while 
+//calling on placing the food to a random location
+function updateFood() {
+    if(onSnake(food)) {
+    expandSnake(expansionRate)
+    food = getRandomFoodPosition();
+}
 }
 
-//UpdateSnakeFood
+//Creates our Food Element
+function drawFood(gameBoard) {
+    
+     const foodElement = document.createElement('div');
+     foodElement.style.gridRowStart = food.y;
+     foodElement.style.gridColumnStart = food.x;
+     foodElement.classList.add('food');
+     $('#game-board').append(foodElement);
+};
+
+//Snake body and Food Interaction -------------------------------
+
+//Function that expands our snake's body as it eats foodElement
+function expandSnake(amount) {
+    newSnakeElements += amount
+};
+
+//If Food is on snakeBody, this will return True
+//If snakeHead touches snakeBody, this will return True (see snakeIntersection)
+function onSnake(position, { ignoreHead = false } = {}) {
+    return snakeBody.some((segment, index) =>{
+        if(ignoreHead && index === 0) return false
+        return equalPositions(segment, position)
+    })
+}
+
+//SnakeHead's position
+function getSnakeHead() {
+    return snakeBody[0]
+}
+
+//Snake head touches snake body (true)
+function snakeIntersection() {
+    return onSnake(snakeBody[0], { ignoreHead: true })
+}
+
+//If our snakeHead and Food are on equal positions, this will return True
+function equalPositions(pos1, pos2) {
+    return pos1.x === pos2.x && pos1.y === pos2.y
+}
+
+//Appends newSnakeElement onto snakeBody
+function addSegments() {
+    for (let i=0; i < newSnakeElements; i++) {
+        snakeBody.push({ ...snakeBody[snakeBody.length - 1]})
+    }
+
+    newSnakeElements = 0;
+}
+
+//Randomizes food positioning throughout game-board
+//Everytime a newFoodPosition is called, it will loop 
+//through and place a newGridPosition for the foodElement
+function getRandomFoodPosition() {
+    let newFoodPosition
+
+    //Makes sure that the newFoodPosition is never onSnake
+    while(newFoodPosition == null || onSnake(newFoodPosition)) {
+        newFoodPosition = randomGridPosition()
+    }
+    return newFoodPosition
+}
+
+//Grid --------------------------------------------
 
 
+function randomGridPosition() {
+    return {
+        x: Math.floor(Math.random() * grid_size) + 1,
+        y: Math.floor(Math.random() * grid_size) + 1,
+    }
+}
 
-
-
-draw()
-update()
-// updateSnake()
+function outsideGrid(position) {
+    return (
+        position.x < 1 || position.x > grid_size || 
+        position.y < 1 || position.y > grid_size 
+    )
+}
 
