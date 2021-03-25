@@ -1,10 +1,17 @@
 //Global Variables ------------------------------------------
 
+let gameState = {
+    player: {
+        name:'',
+        points: 0,
+    }
+}
+
 let lastRenderTime = 0;
 let Snake_Speed = 10;
 
 const snakeBody = [
-    { x:11 , y:11 }  
+    { x:10 , y:10 }  
 ];
 let newSnakeElements = 0;
 
@@ -19,6 +26,18 @@ let lastInputDirection = { x:0, y:0 };
 
 let grid_size = 21;
 let gameOver = false;
+
+//Main Tick Function ------------------------------------------
+
+function requestPlayerName() {
+    const playerNameForm = $('<input id="player-name-input" type="text"></input>');
+    const playerNameElement = $('#player-name')
+    playerNameElement.append(playerNameForm)
+
+    $('#app').on('input', '#player-name-input', function() {
+        
+    })
+};
 
 
 //Main Tick Function ------------------------------------------
@@ -43,6 +62,7 @@ function main(currentTime) {
 }
 
 window.requestAnimationFrame(main);
+requestPlayerName();
 
 //Main Calling Functions ------------------------------------------
 
@@ -113,7 +133,7 @@ function drawSnake(gameBoard) {
 
 //Input Information ------------------------------------------
 
-//Key directions while ensuring snake does not back-in to itself
+//Switches key directions while ensuring snake does not back-in to itself
 window.addEventListener('keydown', function(event){
     switch (event.key) {
         case 'ArrowUp':
