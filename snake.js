@@ -1,4 +1,5 @@
 //Global Variables ------------------------------------------
+const gameBoard = $('#game-board');
 
 let gameState = {
     player: {
@@ -7,8 +8,8 @@ let gameState = {
     }
 }
 
-let lastRenderTime = 0;
-let Snake_Speed = 10;
+let grid_size = 21;
+let gameOver = false;
 
 const snakeBody = [
     { x:10 , y:10 }  
@@ -18,27 +19,54 @@ let newSnakeElements = 0;
 let food = { x:10, y:1 };
 const expansionRate = 1;
 
-
-const gameBoard = $('#game-board');
+let lastRenderTime = 0;
+let Snake_Speed = 10;
 
 let inputDirection = { x:0, y:0 };
 let lastInputDirection = { x:0, y:0 };
 
-let grid_size = 21;
-let gameOver = false;
+//Start Game ------------------------------------------
 
-//Main Tick Function ------------------------------------------
 
+//Requests player's name upon starting the game
+//Allows user to start game upon entering their name
 function requestPlayerName() {
-    const playerNameForm = $('<input id="player-name-input" type="text"></input>');
+
+    //User Name Form
+    const playerNameForm = $(`
+    <form id="player-name-form">
+        <input id="player-name-input" type="text" />
+        <button>Start Game</button>
+    </form>`);
+
     const playerNameElement = $('#player-name')
     playerNameElement.append(playerNameForm)
-
-    $('#app').on('input', '#player-name-input', function() {
-        
+    
+    //User Name Input
+    $('#app').on('input', '#player-name-input', function(event) {
+        event.preventDefault();
+        let name = $('#player-name-input').val();
+        gameState.player.name = name;
     })
+
+    //User Name Submit
+    $('#app').on('submit', '#player-name-form', function(event) {
+        event.preventDefault();
+        if(gameState.player.name !== ""){
+        $('#player-name-input').remove();
+        playerNameElement.text(`${gameState.player.name}`)
+        startGame()
+        }
+    })
+
 };
 
+requestPlayerName();
+
+//Starts game once called -- called in requestPlayerName()
+function startGame() {
+    window.requestAnimationFrame(main);
+}
 
 //Main Tick Function ------------------------------------------
 
@@ -61,8 +89,6 @@ function main(currentTime) {
     draw()
 }
 
-window.requestAnimationFrame(main);
-requestPlayerName();
 
 //Main Calling Functions ------------------------------------------
 
@@ -169,6 +195,8 @@ function updateFood() {
     if(onSnake(food)) {
     expandSnake(expansionRate)
     food = getRandomFoodPosition();
+    gameState.player.points++
+    $('#score').text(gameState.player.points)
 }
 }
 

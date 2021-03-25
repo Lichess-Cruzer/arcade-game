@@ -51,6 +51,12 @@ body {
     height: 10vmin;
 }
 
+/* #snake-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+} */
+
 .snake {
     background-color: white;
     /* border: .25vmin solid black; */
