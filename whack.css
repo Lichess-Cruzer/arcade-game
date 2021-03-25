@@ -1,0 +1,40 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    box-sizing: border-box;
+    font-size: 10px;
+    background: #ffc600;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+    
+}
+
+.score {
+
+}
+
+.canvas {
+    
+}
+
+.hole {
+    
+}
+
+.hole:after {
+
+}
+
+.mole {
+
+}
+
+.hole.up .mole {
+    
+}
